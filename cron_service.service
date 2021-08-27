@@ -1,0 +1,14 @@
+[Unit]
+Description=Corn job execution for social feeds
+After=network.target
+
+[Service]
+Type=simple
+Restart=no
+User=concept
+Group=root
+WorkingDirectory=/var/www/html/clientportalv2/CRON-JOB-SCHEDULER/
+ExecStart=/var/www/html/cilentportalv2/CRON-JOB-SCHEDULER/myenv/python3 /var/www/html/clientportalv2/CRON-JOB-SCHEDULER/cron_job_scheduler.py
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,10 @@
+sudo madir cron-job-scheduler
+sudo apt update
+sudo apt upgrade
+sudo apt install python3-pip
+pip --version
+sudo apt install python3.8-venv
+sudo python3 -m venv myenv
+source myenv/bin/activatesudo
+chmod 777 cron-job-scheduler
+sudo python3 cron_job_scheduler.py >> mylog.txt
