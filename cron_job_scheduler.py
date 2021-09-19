@@ -6,58 +6,86 @@ from datetime import timedelta
 import collections
 import os
 
-Social_endpoints = collections.namedtuple('Social_endpoints', [ 'endpoint_name','endpoint','execution_frequency_in_sec'])
+import sys
+import logging
+
+
+Social_endpoints = collections.namedtuple('Social_endpoints', [ 'endpoint_name','endpoint','logfile','execution_frequency_in_sec'])
 
 # social_endpoints_data = (
-#     Social_endpoints(endpoint_name='Instagram',endpoint='http://localhost:4001/cron-jobs/insta-hashtag-poll', execution_frequency_in_sec=3610),
-#     Social_endpoints(endpoint_name='Facebook',endpoint='http://localhost:4001/cron-jobs/fb-poll', execution_frequency_in_sec=3610)
+#     Social_endpoints(endpoint_name='insta_facebook',endpoint=['https://www.google.com', 'https://www.gmail.com'], logfile='insta-facebook.log', execution_frequency_in_sec=10),
+#     Social_endpoints(endpoint_name='yahoo',endpoint=['https://www.yahoo.com'], logfile='pintrest.log', execution_frequency_in_sec=15)
 # )
-mutex = 0
 
 social_endpoints_data = (
-    Social_endpoints(endpoint_name='insta_facebook',endpoint=['https://www.google.com', 'https://www.gmail.com'], execution_frequency_in_sec=10),
-    # Social_endpoints(endpoint_name='youtube',endpoint=['https://www.youtube.com'], execution_frequency_in_sec=15),
-    # Social_endpoints(endpoint_name='yahoo',endpoint=['https://www.yahoo.com'], execution_frequency_in_sec=15),
-
+    Social_endpoints(endpoint_name='insta_facebook',endpoint=['http://localhost:4001/cron-jobs/insta-hashtag-poll', 'http://localhost:4001/cron-jobs/fb-poll'], logfile='insta-facebook.log', execution_frequency_in_sec=3610),
+    Social_endpoints(endpoint_name='youtube_delete',endpoint=['http://localhost:4001/cron-jobs/youtube-delete'], logfile='youtube-delete.log', execution_frequency_in_sec=86400),
+    Social_endpoints(endpoint_name='youtube',endpoint=['http://localhost:4001/cron-jobs/youtube-poll'], logfile='youtube.log', execution_frequency_in_sec=3610),
+    Social_endpoints(endpoint_name='Blogs and Forums',endpoint=['http://localhost:4001/cron-jobs/blog-forum-poll'], logfile='blogs-forums.log', execution_frequency_in_sec=86400),
+    Social_endpoints(endpoint_name='Pintrest',endpoint=['http://localhost:4001/cron-jobs/pinterest-poll'], logfile='pintrest.log', execution_frequency_in_sec=86400)
 )
-
 
 def transform(x):
     while True:
-        if x.endpoint_name.lower() == 'insta_facebook':
-            print(f"{os.getpid()} {x.endpoint[0]}")
-            starttime = datetime.now()
-            data = requests.get(x.endpoint[0])
-            endtime = datetime.now()
-            no_of_sec = (endtime-starttime).total_seconds()
-            if no_of_sec <= x.execution_frequency_in_sec:
-                print(f"{datetime.now()}-{x.endpoint_name} insta api executed before {x.execution_frequency_in_sec - no_of_sec} seconds...puting system in wait mode for {x.execution_frequency_in_sec - no_of_sec} seconds")
-                time.sleep(x.execution_frequency_in_sec - no_of_sec)
-            
-            print(no_of_sec)
+        try:
+            logging.basicConfig(filename=x.logfile, level=logging.INFO)
+            if x.endpoint_name.lower() == 'insta_facebook':
+                
+                starttime = datetime.now()
+                log_text = f"start time = {starttime} process id ={os.getpid()} endpoint={x.endpoint[0]}"
+                data = requests.get(x.endpoint[0])
+                
+                # print(f'mapping topics for instragram feeds {data}')
+                data1 = requests.get('http://localhost:4001/cron-jobs/topic-feed-map')
+                endtime = datetime.now()
+                no_of_sec = (endtime-starttime).total_seconds()
+                log_text = log_text + f" end_time = {endtime} execution time = {no_of_sec} seconds"
+                
+                if no_of_sec <= x.execution_frequency_in_sec:
+                    log_text = log_text + f" instagram api executed before {x.execution_frequency_in_sec - no_of_sec} seconds...puting system in wait mode for {x.execution_frequency_in_sec} seconds"
+                    logging.info(log_text)
+                    time.sleep(x.execution_frequency_in_sec)
+                else:
+                    log_text = log_text + f" instagram api execution time = {no_of_sec}"
+                    logging.warning(log_text)
+                    time.sleep(x.execution_frequency_in_sec)
 
-            print(f"{os.getpid()} {x.endpoint[1]}")
-            starttime = datetime.now()
-            data = requests.get(x.endpoint[1])
-            endtime = datetime.now()
-            no_of_sec = (endtime-starttime).total_seconds()
-            if no_of_sec <= x.execution_frequency_in_sec:
-                print(f"{datetime.now()}-{x.endpoint_name} facebook api executed before {x.execution_frequency_in_sec - no_of_sec} seconds...puting system in wait mode for {x.execution_frequency_in_sec - no_of_sec} seconds")
-                time.sleep(x.execution_frequency_in_sec - no_of_sec)
+                starttime = datetime.now()
+                log_text = f"start time = {starttime} process id ={os.getpid()} endpoint={x.endpoint[1]}"
+                data = requests.get(x.endpoint[1])
+                endtime = datetime.now()
+                no_of_sec = (endtime-starttime).total_seconds()
+                log_text = log_text + f" end_time = {endtime} execution time = {no_of_sec} seconds"
+                
+                if no_of_sec <= x.execution_frequency_in_sec:
+                    log_text = log_text + f" facebook api executed before {x.execution_frequency_in_sec - no_of_sec} seconds...puting system in wait mode for {x.execution_frequency_in_sec} seconds"
+                    logging.info(log_text)
+                    time.sleep(x.execution_frequency_in_sec)
+                else:
+                    log_text = log_text + f" facebook api execution time = {no_of_sec}"
+                    logging.warning(log_text)
+                    time.sleep(x.execution_frequency_in_sec)
+                
+            else:    
+                
+                starttime = datetime.now()
+                log_text = f"start time = {starttime} process id ={os.getpid()} endpoint={x.endpoint[0]}"
+                data = requests.get(x.endpoint[0])
+                endtime = datetime.now()
+                no_of_sec = (endtime-starttime).total_seconds()
+                log_text = log_text + f" end_time = {endtime} execution time = {no_of_sec} seconds"
+
+                if no_of_sec <= x.execution_frequency_in_sec:
+                    log_text = log_text + f" api executed before {x.execution_frequency_in_sec - no_of_sec} seconds...puting system in wait mode for {x.execution_frequency_in_sec - no_of_sec} seconds"
+                    logging.info(log_text)
+                    time.sleep(x.execution_frequency_in_sec - no_of_sec)
+                else:
+                    log_text = log_text + f" api execution time = {no_of_sec}"
+                    logging.warning(log_text)
+        except Exception as e:
+            logging.warning(f'[{datetime.now()}]:exception occured while hitting endpoint {x.endpoint_name} putting process in sleep mode for {x.execution_frequency_in_sec} sec...{e}')
+            time.sleep(x.execution_frequency_in_sec)
             
-            print(no_of_sec)
-        else:    
-            print(f"{os.getpid()} {x.endpoint[0]}")
-            starttime = datetime.now()
-            data = requests.get(x.endpoint[0])
-            endtime = datetime.now()
-            no_of_sec = (endtime-starttime).total_seconds()
-            if no_of_sec <= x.execution_frequency_in_sec:
-                print(f"{datetime.now()}-{x.endpoint_name} api executed before {x.execution_frequency_in_sec - no_of_sec} seconds...puting system in wait mode for {x.execution_frequency_in_sec - no_of_sec} seconds")
-                time.sleep(x.execution_frequency_in_sec - no_of_sec)
-            
-            print(no_of_sec)
-        # return data
 
 if __name__ == '__main__':
     pool = multiprocessing.Pool()
